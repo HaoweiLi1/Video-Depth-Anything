@@ -17,7 +17,7 @@ import os
 import torch
 
 from video_depth_anything.video_depth import VideoDepthAnything
-from utils.dc_utils import read_video_frames, save_video
+from utils.dc_utils import read_video_frames, save_video, save_depth_frames_uint16
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Video Depth Anything')
@@ -32,6 +32,7 @@ if __name__ == '__main__':
     parser.add_argument('--grayscale', action='store_true', help='do not apply colorful palette')
     parser.add_argument('--save_npz', action='store_true', help='save depths as npz')
     parser.add_argument('--save_exr', action='store_true', help='save depths as exr')
+    parser.add_argument('--save_uint16', action='store_true', help='save depths as 16-bit PNG')
 
     args = parser.parse_args()
 
@@ -75,6 +76,10 @@ if __name__ == '__main__':
             exr_file = OpenEXR.OutputFile(output_exr, header)
             exr_file.writePixels({"Z": depth.tobytes()})
             exr_file.close()
+    if args.save_uint16:
+        depth_uint16_dir = os.path.join(args.output_dir, os.path.splitext(video_name)[0]+'_depths_uint16')
+        from utils.dc_utils import save_depth_frames_uint16
+        save_depth_frames_uint16(depths, depth_uint16_dir)
 
     
 

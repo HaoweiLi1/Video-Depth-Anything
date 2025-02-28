@@ -84,3 +84,33 @@ def save_video(frames, output_video_path, fps=10, is_depths=False, grayscale=Fal
             writer.append_data(frames[i])
 
     writer.close()
+
+def save_depth_frames_uint16(frames, output_dir, prefix="depth_"):
+    """
+    Save depth frames as uint16 PNG images.
+    
+    Args:
+        frames: Numpy array of depth frames
+        output_dir: Directory to save the images
+        prefix: Prefix for filenames
+    """
+    import os
+    from PIL import Image
+    
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Find min and max across all frames for consistent normalization
+    d_min, d_max = frames.min(), frames.max()
+    
+    for i in range(frames.shape[0]):
+        # Normalize to [0, 65535] range and convert to uint16
+        depth = frames[i]
+        depth_normalized = ((depth - d_min) / (d_max - d_min) * 65535).astype(np.uint16)
+        
+        # Save as 16-bit PNG
+        depth_img = Image.fromarray(depth_normalized)
+        depth_img.save(os.path.join(output_dir, f"{prefix}{i:04d}.png"))
+    
+    # Also save the normalization parameters for reference
+    with open(os.path.join(output_dir, "normalization_params.txt"), "w") as f:
+        f.write(f"min_depth: {d_min}\nmax_depth: {d_max}")
